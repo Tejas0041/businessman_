@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Page</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+</head>
+<body>
+
+    <h2>Payment Dashboard</h2>
+
+    <form action="/tobank/<%= u._id %>" method="post">
+        <label for="amount">Pay to <b>Bank</b></label>
+        <input type="number" id="amount" name="balance">
+        <button type="submit" class="btn btn-success">Pay</button>
+    </form>
+
+    <br>
+
+    <% for(let payee of alluser){ %>
+    <form action="/userpayment/<%= u._id %>/<%= payee._id %>" method="post">
+        <label for="amount">Pay to <b><%= payee.name %></b></label>
+        <input type="number" id="amount" name="balance">
+        <button type="submit" class="btn btn-success">Pay</button>
+    </form>
+    <br>
+    <% } %>
+
+    <a href="/renderuserhome/<%= u._id %>" style="text-decoration: none; color: black;"><button class="btn btn-primary">Go Back</button></a>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+</body>
+</html>

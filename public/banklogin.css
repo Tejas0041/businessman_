@@ -1,0 +1,7 @@
+*{
+    background-color: rgb(209, 197, 197);
+}
+
+input.no-bg{
+    background-image: none;
+}
