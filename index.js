@@ -9,8 +9,10 @@ const User= require('./userschema.js');
 const mongoose= require('mongoose');
 const Bank= require('./bankerschema.js');
 const session= require('express-session');
+const History= require('./historyschema.js');
 
 const dburl= process.env.DB_URL;
+const localurl= 'mongodb://localhost:27017/businessman';
 
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));  //setting up the public directory to serve static files
@@ -31,7 +33,7 @@ const sessionConfig= {
 
 app.use(session(sessionConfig));
 
-mongoose.connect(dburl);
+mongoose.connect(localurl);
 const db= mongoose.connection;
 db.on("error", console.error.bind(console, "connection error: "));
 db.once("open", ()=>{
@@ -101,12 +103,16 @@ app.get('/startgame', async(req, res)=>{
     await Bank.updateMany({}, {$set: { balance: 106650 }}, {new: true});
     const B= await Bank.find({});
     const bank= B[0];
+
+    await History.deleteMany({});
+
     return res.redirect('/bankhome')
 });
 
 app.get('/end', async(req, res)=>{
     await User.updateMany({}, {$set: { balance: 0 }});
     await Bank.updateMany({}, {$set: { balance: 166650 }}, {new: true});
+    await History.deleteMany({});
     const users= await User.find({});
     const b= await Bank.find({});
     const bank= b[0];
@@ -121,6 +127,11 @@ app.get('/userprofile/:id', async(req, res)=>{
 
 app.post('/passingfee/:id', async(req, res)=>{
     const {id}= req.params;
+    const u= await User.findById(id);
+    uname= u.name;
+    var str= {text: `Bank paid passing fee of ₹100 to ${uname}`};
+    const s= new History(str);
+    await s.save();
     await User.findByIdAndUpdate(id, { $inc: { balance: 100 } }, { new: true });
     await Bank.updateMany({}, { $inc: { balance: -100 } }, { new: true });
 
@@ -130,6 +141,17 @@ app.post('/passingfee/:id', async(req, res)=>{
 app.post('/customamount/:id', async(req, res)=>{
     const {id}= req.params;
     const amount= req.body.balance;
+
+    if(amount<=0){
+        return res.send("AMOUNT MUST BE GREATER THAN ₹0");
+    }
+
+    const u= await User.findById(id);
+    uname= u.name;
+    var str= {text: `Bank paid an amount of ₹${amount} to ${uname}`};
+    const s= new History(str);
+    await s.save();
+
     await User.findByIdAndUpdate(id, { $inc: { balance: amount } }, { new: true });
     await Bank.updateMany({}, { $inc: { balance: -amount } }, { new: true });
 
@@ -147,11 +169,31 @@ app.get('/tobank/:id', async(req, res)=>{
 app.post('/tobank/:id', async(req, res)=>{
     const {id}= req.params;
     const amount= req.body.balance;
+
+    if(amount<=0){
+        return res.send("AMOUNT MUST BE GREATER THAN ₹0");
+    }
+
+
+
+    const u= await User.findById(id);
+    uname= u.name;
+
+    const ubalance= u.balance;
+
+    if(amount>ubalance){
+        return res.send("Insufficient Balance");
+    }
+
+    var str= {text: `${uname} paid an amount of ₹${amount} to Bank`};
+    const s= new History(str);
+    await s.save();
+
     await User.findByIdAndUpdate(id, { $inc: { balance: -amount } }, { new: true });
     await Bank.updateMany({}, { $inc: { balance: amount } }, { new: true });
-    const u= await User.findById(id);
+    const U= await User.findById(id);
 
-    res.redirect(`/renderuserhome/${u._id}`);
+    res.redirect(`/renderuserhome/${U._id}`);
 });
 
 app.post('/userpayment/:u/:payee', async(req, res)=>{
@@ -162,11 +204,32 @@ app.post('/userpayment/:u/:payee', async(req, res)=>{
 
     const amount= req.body.balance;
 
+    const R= await User.findById(receiver);
+    const Rname= R.name;
+
+    const P= await User.findById(payer);
+    const Pname= P.name;
+
+    const ubalance= P.balance;
+
+    if(amount>ubalance){
+        return res.send("Insufficient Balance");
+    }
+
+    var str= {text: `${Pname} paid an amount of ₹${amount} to ${Rname}`};
+    const s= new History(str);
+    await s.save();
+
     await User.findByIdAndUpdate(payer, { $inc: { balance: -amount } }, { new: true });
     await User.findByIdAndUpdate(receiver, { $inc: { balance: amount } }, { new: true });
-    const u= await User.findById(payer);
+    const U= await User.findById(payer);
 
-    res.redirect(`/renderuserhome/${u._id}`);
+    res.redirect(`/renderuserhome/${U._id}`);
+});
+
+app.get('/history', async(req, res)=>{
+    const history= await History.find({}).exec();
+    res.render('templates/history.ejs', {history});
 });
 
 

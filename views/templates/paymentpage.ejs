@@ -15,7 +15,7 @@
     <form action="/tobank/<%= u._id %>" method="post">
         <label for="amount">Pay to <b>Bank</b></label>
         <input type="number" id="amount" name="balance">
-        <button type="submit" class="btn btn-success">Pay</button>
+        <button type="submit" class="btn btn-warning">Pay</button>
     </form>
 
     <br>
@@ -28,6 +28,7 @@
     </form>
     <br>
     <% } %>
+
 
     <a href="/renderuserhome/<%= u._id %>" style="text-decoration: none; color: black;"><button class="btn btn-primary">Go Back</button></a>
 
