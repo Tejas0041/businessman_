@@ -33,7 +33,7 @@ const sessionConfig= {
 
 app.use(session(sessionConfig));
 
-mongoose.connect(localurl);
+mongoose.connect(dburl);
 const db= mongoose.connection;
 db.on("error", console.error.bind(console, "connection error: "));
 db.once("open", ()=>{
